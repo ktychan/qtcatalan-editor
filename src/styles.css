@@ -1,0 +1,36 @@
+.active {
+  background-color: lightgrey;
+}
+
+.chain {
+  display: flex;
+  padding: 10px;
+}
+
+.dyck-container {
+  position: relative;
+  flex-grow: 1;
+}
+
+.dyck-overlay {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  font-family: "Roboto Mono", monospace;
+  font-size: 9pt;
+}
+
+.dyck-info {
+  position: absolute;
+  bottom: 0px;
+  right: 10px;
+}
+
+input[type=number] {
+  -webkit-appearance: none;
+}
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
