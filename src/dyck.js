@@ -95,7 +95,7 @@ function make_path(path, onclick, unit = 40, margin = 5) {
 
   let container = document.createElement("div");
   container.data = path;
-  container.id = w.join("");
+  container.id = 'd'+w.join("");
   container.className = "dyck-container";
   container.appendChild(canvas);
   container.appendChild(overlay);

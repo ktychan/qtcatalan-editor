@@ -1,6 +1,9 @@
 .active {
   background-color: lightgrey;
 }
+.active-n {
+  font-weight: bold;
+}
 
 .chain {
   display: flex;

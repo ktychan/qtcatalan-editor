@@ -1,19 +1,24 @@
 import "./styles.css";
 import { make_path } from "./dyck.js";
-import data from "./data";
-import chains from "./chains";
+import $ from "jquery";
+// import data from "./data.js";
+// console.log(JSON.stringify(data));
 
-let app = document.getElementById("app");
-let selected_element = null;
-let selected_element_saved_className = null;
+let app = $("#app");
+var urlParams = new URLSearchParams(window.location.search);
+let n = urlParams.get('n');
+$(`#n${n}`).addClass('active-n');
 
 // deal with keyup events
 window.addEventListener("keypress", (event) => {
-  if (selected_element === null) {
+  let selected = $(".active");
+
+  if (selected.length === 0) {
     console.log("nothing is selected. ignore keyup event.");
     return;
   }
 
+  let selected_element = selected[0];
   const key = event.key;
   if ("wasdqejk".indexOf(key) < 0) {
     console.log(key + " is ignored.");
@@ -48,7 +53,7 @@ window.addEventListener("keypress", (event) => {
     container.className = "chain";
     container.appendChild(selected_element);
 
-    app.appendChild(container);
+    app.append(container);
   } else if (key === "q" && parent.children.length > 1) {
     parent.removeChild(selected_element);
     parent.insertBefore(selected_element, parent.children[0]);
@@ -70,46 +75,11 @@ window.addEventListener("keypress", (event) => {
   }
 });
 
-// setup callbacks
-let handle_click = (element) => {
-  let something_new = element !== selected_element;
-
-  // deselect
-  if (selected_element !== null) {
-    selected_element.className = selected_element_saved_className;
-
-    selected_element = null;
-    selected_element_saved_className = null;
-  }
-
-  // select
-  if (something_new) {
-    selected_element = element;
-    selected_element_saved_className = element.className;
-
-    selected_element.className += " active";
-    //console.log(element.data);
-  }
-};
-
-document.getElementById("export-button").onclick = () => {
-  let chains = [];
-  for (let container of app.children) {
-    let chain = [];
-    for (let element of container.children) {
-      chain.push(element.data);
-    }
-    chains.push(chain);
-  }
-
-  document.getElementById("export-data").innerText = "export default " + JSON.stringify(chains) + ";";
-};
-
 document.getElementById("filter-button").onclick = () => {
   let input = document.getElementById("filter-input");
   if (input.value !== null) {
     let value = Number(input.value);
-    for (let container of app.children) {
+    for (let container of app.children()) {
       let chain = [];
       for (let element of container.children) {
         if (element.data[1] + element.data[2] !== value) {
@@ -122,24 +92,59 @@ document.getElementById("filter-button").onclick = () => {
   }
 };
 
-document.getElementById("clear-button").onclick = () => {
-  for (let container of app.children) {
+document.getElementById("show-everything-button").onclick = () => {
+  for (let container of app.children()) {
     let chain = [];
-    for (let element of container.children) {
+    for (let element of $(container).children()) {
       element.style.display = "block";
     }
   }
 };
 
-// populate app
-let n = 6;
-for (let paths of chains || data[n]) {
-  let container = document.createElement("div");
-  container.className = "chain";
+document.getElementById("save-button").onclick = () => {
+  $.ajax({
+    url: "https://api.jsonbin.io/b/5f6816637243cd7e82405f1b/latest",
+    method: "GET",
+  }).done(data => {
+    let n = $("#n-input").val();
+    let chains = [];
+    for (let container of app.children()) {
+      let chain = [];
+      for (let element of container.children) {
+        chain.push(element.data);
+      }
+      chains.push(chain);
+    }
 
-  // populate the chain
-  for (let path of paths) {
-    container.appendChild(make_path(path, handle_click, 20));
+    data[n] = chains;
+    $.ajax({
+      url: "https://api.jsonbin.io/b/5f6816637243cd7e82405f1b", 
+      method: "PUT",
+      contentType: "application/json",
+      data: JSON.stringify(data),
+    })
+  })
+};
+
+// mouse click callback
+let handle_click = (element) => {
+  $(element).toggleClass("active");
+};
+
+// populate app
+$.ajax({
+  url: "https://api.jsonbin.io/b/5f6816637243cd7e82405f1b/latest",
+  method: "GET",
+}).done((data, textStatus, jqXHR) => {
+  let chains = data[n];
+  for (let chain of chains) {
+    let container = document.createElement("div");
+    container.className = "chain";
+
+    // populate the chain
+    for (let path of chain) {
+      container.appendChild(make_path(path, handle_click, 20));
+    }
+    app.append(container);
   }
-  app.appendChild(container);
-}
+});
