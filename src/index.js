@@ -120,6 +120,7 @@ document.getElementById("save-button").onclick = () => {
     $.ajax({
       url: "https://api.jsonbin.io/b/5f6816637243cd7e82405f1b", 
       method: "PUT",
+      crossDomain: true,
       contentType: "application/json",
       data: JSON.stringify(data),
     })
@@ -128,7 +129,14 @@ document.getElementById("save-button").onclick = () => {
 
 // mouse click callback
 let handle_click = (element) => {
-  $(element).toggleClass("active");
+  if ($('#active').length > 0) {
+    $('#active')[0].removeClass("active");
+    if ($('#active')[0] != $(element)) {
+      $(element).addClass("active");
+    }
+  } else {
+    $(element).addClass("active");
+  }
 };
 
 // populate app
