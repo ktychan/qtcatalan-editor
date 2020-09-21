@@ -108,7 +108,6 @@ document.getElementById("save-button").onclick = () => {
     url: "https://api.jsonbin.io/b/5f6816637243cd7e82405f1b/latest",
     method: "GET",
   }).done(data => {
-    let n = $("#n-input").val();
     let chains = [];
     for (let container of app.children()) {
       let chain = [];
@@ -141,6 +140,7 @@ document.getElementById("save-button").onclick = () => {
 $("#save-status").on("click", () => {
   $("#save-status").html("");
 })
+
 // mouse click callback
 let handle_click = (element) => {
 
