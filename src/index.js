@@ -63,14 +63,16 @@ window.addEventListener("keypress", (event) => {
   } else if (key === "k") {
     let parentSibling = parent.previousSibling;
     if (parentSibling !== null) {
-      app.removeChild(parent);
-      app.insertBefore(parent, parentSibling);
+      let app0 = app.get(0);
+      app0.removeChild(parent);
+      app0.insertBefore(parent, parentSibling);
     }
   } else if (key === "j") {
     let parentSibling = parent.nextSibling;
     if (parentSibling !== null) {
-      app.removeChild(parent);
-      app.insertBefore(parent, parentSibling.nextSibling);
+      let app0 = app.get(0);
+      app0.removeChild(parent);
+      app0.insertBefore(parent, parentSibling.nextSibling);
     }
   }
 });
@@ -129,9 +131,12 @@ document.getElementById("save-button").onclick = () => {
 
 // mouse click callback
 let handle_click = (element) => {
-  if ($('#active').length > 0) {
-    $('#active')[0].removeClass("active");
-    if ($('#active')[0] != $(element)) {
+
+  if ($('.active').length > 0) {
+    let something_new = $(".active")[0] != $(element)[0];
+
+    $('.active').removeClass("active");
+    if (something_new) {
       $(element).addClass("active");
     }
   } else {
