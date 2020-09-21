@@ -137,9 +137,30 @@ document.getElementById("save-button").onclick = () => {
   })
 };
 
-$("#save-status").on("click", () => {
+document.getElementById("save-status").onclick = () => {
   $("#save-status").html("");
-})
+};
+
+document.getElementById("sage-button").onclick = () => {
+  let output = "chains = [\n";
+  for (let container of app.children()) {
+    output += "  [\n";
+    for (let element of container.children) {
+      output += `    DyckWord([${element.data[0]}]),\n`;
+    }
+    output += "  ],\n"
+  }
+  output += "]";
+
+  $("#sage-code").val(output);
+  $("#sage-code").get(0).select();
+  document.execCommand("copy");
+  $("#sage-status").html("Sage code saved to clip board.");
+};
+
+document.getElementById("sage-status").onclick = () => {
+  $("#sage-status").html("");
+};
 
 // mouse click callback
 let handle_click = (element) => {
