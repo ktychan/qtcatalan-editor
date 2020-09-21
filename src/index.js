@@ -119,6 +119,7 @@ document.getElementById("save-button").onclick = () => {
     }
 
     data[n] = chains;
+    $("#save-status").html("Saving...");
     $.ajax({
       url: "https://api.jsonbin.io/b/5f6816637243cd7e82405f1b", 
       method: "PUT",
@@ -126,9 +127,20 @@ document.getElementById("save-button").onclick = () => {
       contentType: "application/json",
       data: JSON.stringify(data),
     })
+    .done((data, textStatus) => {
+      $("#save-status").html("Saved");
+    })
+    .fail((err, textStatus) => {
+      $("#save-status").html("Failed :(");
+      console.log(err);
+      console.log(textStatus);
+    })
   })
 };
 
+$("#save-status").on("click", () => {
+  $("#save-status").html("");
+})
 // mouse click callback
 let handle_click = (element) => {
 
