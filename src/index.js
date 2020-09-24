@@ -215,14 +215,13 @@ document.getElementById("sage-button").onclick = () => {
   }
   output += "]";
 
+  // sage-output must be visible.
+  $("#sage-code").css("display", "block");
   $("#sage-code").val(output);
   $("#sage-code").get(0).select();
   document.execCommand("copy");
-  $("#sage-status").html("Sage code saved to clip board.");
-};
-
-document.getElementById("sage-status").onclick = () => {
-  $("#sage-status").html("");
+  $("#sage-code").css("display", "none");
+  $("#status").html("Sage code saved to clip board.");
 };
 
 document.getElementById("next-error-button").onclick = () => {
