@@ -167,6 +167,7 @@ document.getElementById("show-everything-button").onclick = () => {
 };
 
 document.getElementById("save-button").onclick = () => {
+  $("#status").html("Download data...")
   $.ajax({
     url: "https://api.jsonbin.io/b/5f6816637243cd7e82405f1b/latest",
     method: "GET",
@@ -181,7 +182,7 @@ document.getElementById("save-button").onclick = () => {
     }
 
     data[n] = chains;
-    $("#status").html("Saving...");
+    $("#status").html("Uploading...");
     $.ajax({
       url: "https://api.jsonbin.io/b/5f6816637243cd7e82405f1b",
       method: "PUT",
