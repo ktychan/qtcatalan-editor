@@ -6,8 +6,74 @@ import $ from "jquery";
 
 let app = $("#app");
 var urlParams = new URLSearchParams(window.location.search);
-let n = urlParams.get('n');
-$(`#n${n}`).addClass('active-n');
+let n = urlParams.get("n");
+$(`#n${n}`).addClass("active-n");
+
+// error checker
+function check_chain(chain) {
+  if (chain.children.length === 0) {
+    return;
+  }
+
+  // clear all error classes
+  for (let element of chain.children) {
+    $(element).removeClass("error");
+  }
+
+  // check the first element
+  let first = chain.children.item(0);
+  let last_area = first.data[1];
+  let last_dinv = first.data[2];
+  if (last_area > last_dinv) {
+    $(first).addClass("error");
+    return;
+  }
+
+  // check the rest
+  for (let i = 1; i < chain.children.length; i++) {
+    let element = chain.children.item(i);
+    let area = element.data[1];
+    let dinv = element.data[2];
+
+    if (area != last_area + 1 || dinv != last_dinv - 1) {
+      $(element).addClass("error");
+      return;
+    } else {
+      last_area = area;
+      last_dinv = dinv;
+    }
+  }
+}
+
+let handle_click = (element) => {
+  if ($(".active").length > 0) {
+    let something_new = $(".active")[0] != $(element)[0];
+
+    $(".active").removeClass("active");
+    if (something_new) {
+      $(element).addClass("active");
+    }
+  } else {
+    $(element).addClass("active");
+  }
+};
+
+// create a new chain
+function create_chain(children) {
+  let container = document.createElement("div");
+  container.className = "chain";
+  container.observer = new MutationObserver((mutationList, observer) => {
+    check_chain(container);
+  });
+  container.observer.observe(container, { childList: true });
+
+  // populate the chain
+  for (let path of children) {
+    container.appendChild(make_path(path, handle_click, 20));
+  }
+
+  return container;
+}
 
 // deal with keyup events
 window.addEventListener("keypress", (event) => {
@@ -48,11 +114,8 @@ window.addEventListener("keypress", (event) => {
     parent.nextSibling.appendChild(selected_element);
   } else if (key === "s" && parent.nextSibling === null) {
     parent.removeChild(selected_element);
-
-    let container = document.createElement("div");
-    container.className = "chain";
+    let container = create_chain([]);
     container.appendChild(selected_element);
-
     app.append(container);
   } else if (key === "q" && parent.children.length > 1) {
     parent.removeChild(selected_element);
@@ -107,7 +170,7 @@ document.getElementById("save-button").onclick = () => {
   $.ajax({
     url: "https://api.jsonbin.io/b/5f6816637243cd7e82405f1b/latest",
     method: "GET",
-  }).done(data => {
+  }).done((data) => {
     let chains = [];
     for (let container of app.children()) {
       let chain = [];
@@ -118,27 +181,27 @@ document.getElementById("save-button").onclick = () => {
     }
 
     data[n] = chains;
-    $("#save-status").html("Saving...");
+    $("#status").html("Saving...");
     $.ajax({
-      url: "https://api.jsonbin.io/b/5f6816637243cd7e82405f1b", 
+      url: "https://api.jsonbin.io/b/5f6816637243cd7e82405f1b",
       method: "PUT",
       crossDomain: true,
       contentType: "application/json",
       data: JSON.stringify(data),
     })
-    .done((data, textStatus) => {
-      $("#save-status").html("Saved");
-    })
-    .fail((err, textStatus) => {
-      $("#save-status").html("Failed :(");
-      console.log(err);
-      console.log(textStatus);
-    })
-  })
+      .done((data, textStatus) => {
+        $("#status").html("Saved");
+      })
+      .fail((err, textStatus) => {
+        $("#status").html("Failed :(");
+        console.log(err);
+        console.log(textStatus);
+      });
+  });
 };
 
-document.getElementById("save-status").onclick = () => {
-  $("#save-status").html("");
+document.getElementById("status").onclick = () => {
+  $("#status").html("");
 };
 
 document.getElementById("sage-button").onclick = () => {
@@ -148,7 +211,7 @@ document.getElementById("sage-button").onclick = () => {
     for (let element of container.children) {
       output += `    DyckWord([${element.data[0]}]),\n`;
     }
-    output += "  ],\n"
+    output += "  ],\n";
   }
   output += "]";
 
@@ -162,18 +225,13 @@ document.getElementById("sage-status").onclick = () => {
   $("#sage-status").html("");
 };
 
-// mouse click callback
-let handle_click = (element) => {
-
-  if ($('.active').length > 0) {
-    let something_new = $(".active")[0] != $(element)[0];
-
-    $('.active').removeClass("active");
-    if (something_new) {
-      $(element).addClass("active");
-    }
+document.getElementById("next-error-button").onclick = () => {
+  let element = $(".error")[0];
+  if (element) {
+    $(element).attr("tabindex", -1);
+    $(element).trigger("focus");
   } else {
-    $(element).addClass("active");
+    $("#status").html("Yaaaaay! No error.");
   }
 };
 
@@ -184,13 +242,6 @@ $.ajax({
 }).done((data, textStatus, jqXHR) => {
   let chains = data[n];
   for (let chain of chains) {
-    let container = document.createElement("div");
-    container.className = "chain";
-
-    // populate the chain
-    for (let path of chain) {
-      container.appendChild(make_path(path, handle_click, 20));
-    }
-    app.append(container);
+    app.append(create_chain(chain));
   }
 });

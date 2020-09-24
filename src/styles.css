@@ -1,8 +1,11 @@
-.active {
-  background-color: lightgrey;
+/* Dont' show arrows in input boxes with type="number" */
+input[type="number"] {
+  -webkit-appearance: none;
 }
-.active-n {
-  font-weight: bold;
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .chain {
@@ -12,6 +15,7 @@
 
 .dyck-container {
   position: relative;
+  flex-shrink: 1;
   flex-grow: 1;
 }
 
@@ -29,11 +33,26 @@
   right: 10px;
 }
 
-input[type=number] {
-  -webkit-appearance: none;
+.active {
+  background-color: lightgrey;
 }
-input::-webkit-outer-spin-button,
-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+
+.active-n {
+  font-weight: bold;
+}
+
+.error pre{
+  color: red;
+}
+
+#toolbar {
+  position: fixed;
+  background-color: cornsilk;
+  width: 100%;
+  z-index: 1;
+  padding: 10px;
+}
+
+#app {
+  padding-top: 60px;
 }
