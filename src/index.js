@@ -83,7 +83,7 @@ document.addEventListener("keyup", (event) => {
 // deal with keypress events
 window.addEventListener("keypress", (event) => {
   const key = event.key;
-  if ("wasdqejk".indexOf(key) < 0) {
+  if ("wasdqejkWS".indexOf(key) < 0) {
     console.log(key + " is ignored.");
     return;
   }
@@ -156,6 +156,22 @@ window.addEventListener("keypress", (event) => {
         active.each((j, element) => {
           parent.removeChild(element);
           parent.appendChild(element);
+        });
+      } else if (key === "W" && parent.children.length > active.length) {
+        let container = create_chain([]);
+        let app0 = app.get(0);
+        app0.insertBefore(container, parent);
+        active.each((j, element) => {
+          parent.removeChild(element);
+          parent.previousSibling.appendChild(element);
+        });
+      } else if (key === "S" && parent.children.length > active.length) {
+        let container = create_chain([]);
+        let app0 = app.get(0);
+        app0.insertBefore(container, parent.nextSibling);
+        active.each((j, element) => {
+          parent.removeChild(element);
+          parent.nextSibling.appendChild(element);
         });
       }
     });
