@@ -1,8 +1,6 @@
 import "./styles.css";
 import { make_path } from "./dyck.js";
 import $ from "jquery";
-// import data from "./data.js";
-// console.log(JSON.stringify(data));
 
 let app = $("#app");
 var urlParams = new URLSearchParams(window.location.search);
@@ -21,45 +19,42 @@ function check_chain(chain) {
   }
 
   // check the first element
-  let first = chain.children.item(0);
-  let last_area = first.data[1];
-  let last_dinv = first.data[2];
-  if (last_area > last_dinv) {
+  const first = chain.children.item(0);
+  let area = first.data[1];
+  let dinv = first.data[2];
+  if (area > dinv) {
     $(first).addClass("error");
     return;
   }
 
   // check the rest
   for (let i = 1; i < chain.children.length; i++) {
-    let element = chain.children.item(i);
-    let area = element.data[1];
-    let dinv = element.data[2];
+    area += 1;
+    dinv -= 1;
 
-    if (area != last_area + 1 || dinv != last_dinv - 1) {
+    let element = chain.children.item(i);
+    if (element.data[1] != area || element.data[2] != dinv) {
       $(element).addClass("error");
       return;
-    } else {
-      last_area = area;
-      last_dinv = dinv;
     }
   }
 }
 
-let handle_click = (element) => {
-  if ($(".active").length > 0) {
-    let something_new = $(".active")[0] != $(element)[0];
-
-    $(".active").removeClass("active");
-    if (something_new) {
-      $(element).addClass("active");
-    }
-  } else {
-    $(element).addClass("active");
-  }
-};
-
 // create a new chain
 function create_chain(children) {
+  const handle_click = (element) => {
+    if ($(".active").length > 0) {
+      let something_new = $(".active")[0] != $(element)[0];
+
+      $(".active").removeClass("active");
+      if (something_new) {
+        $(element).addClass("active");
+      }
+    } else {
+      $(element).addClass("active");
+    }
+  };
+
   let container = document.createElement("div");
   container.className = "chain";
   container.observer = new MutationObserver((mutationList, observer) => {
@@ -167,7 +162,7 @@ document.getElementById("show-everything-button").onclick = () => {
 };
 
 document.getElementById("save-button").onclick = () => {
-  $("#status").html("Download data...")
+  $("#status").html("Download data...");
   $.ajax({
     url: "https://api.jsonbin.io/b/5f6816637243cd7e82405f1b/latest",
     method: "GET",
