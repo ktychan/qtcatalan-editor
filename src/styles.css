@@ -16,7 +16,6 @@ input::-webkit-inner-spin-button {
 .dyck-container {
   position: relative;
   flex-shrink: 1;
-  flex-grow: 1;
 }
 
 .dyck-overlay {
