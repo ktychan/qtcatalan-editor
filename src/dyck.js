@@ -62,7 +62,7 @@ function draw_path(canvas, w, unit, margin) {
 /*
  * make div and draw dyck word and everything
  */
-function make_path(path, onclick, unit = 40, margin = 5) {
+function make_path(path, onclick, unit = 20, margin = 5) {
   let w = path[0];
   let area = path[1];
   let dinv = path[2];

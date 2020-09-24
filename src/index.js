@@ -1,6 +1,7 @@
 import "./styles.css";
 import { make_path } from "./dyck.js";
 import $ from "jquery";
+$.fn.reverse = [].reverse;
 
 let app = $("#app");
 var urlParams = new URLSearchParams(window.location.search);
@@ -42,19 +43,6 @@ function check_chain(chain) {
 
 // create a new chain
 function create_chain(children) {
-  const handle_click = (element) => {
-    if ($(".active").length > 0) {
-      let something_new = $(".active")[0] != $(element)[0];
-
-      $(".active").removeClass("active");
-      if (something_new) {
-        $(element).addClass("active");
-      }
-    } else {
-      $(element).addClass("active");
-    }
-  };
-
   let container = document.createElement("div");
   container.className = "chain";
   container.observer = new MutationObserver((mutationList, observer) => {
@@ -64,74 +52,142 @@ function create_chain(children) {
 
   // populate the chain
   for (let path of children) {
-    container.appendChild(make_path(path, handle_click, 20));
+    container.appendChild(
+      make_path(path, (element) => $(element).toggleClass("active"))
+    );
   }
 
   return container;
 }
 
-// deal with keyup events
-window.addEventListener("keypress", (event) => {
-  let selected = $(".active");
-
-  if (selected.length === 0) {
-    console.log("nothing is selected. ignore keyup event.");
-    return;
+// disable spacebar scrolling when things are selected.
+document.addEventListener("keydown", (event) => {
+  if (
+    $(".active").length > 0 &&
+    event.code === "Space" &&
+    event.target === document.body
+  ) {
+    event.preventDefault();
   }
+});
 
-  let selected_element = selected[0];
+// pressing space bar clears selections.
+document.addEventListener("keyup", (event) => {
+  if (event.code === "Space" && event.target === document.body) {
+    $(".active").each((index, element) => {
+      $(element).removeClass("active");
+    });
+  }
+});
+
+// deal with keypress events
+window.addEventListener("keypress", (event) => {
   const key = event.key;
   if ("wasdqejk".indexOf(key) < 0) {
     console.log(key + " is ignored.");
     return;
   }
 
-  let parent = selected_element.parentNode;
-  if (key === "a") {
-    let sibling = selected_element.previousSibling;
-    if (sibling !== null) {
-      parent.removeChild(selected_element);
-      parent.insertBefore(selected_element, sibling);
-    }
-  } else if (key === "d") {
-    let sibling = selected_element.nextSibling;
-    if (sibling !== null) {
-      parent.removeChild(selected_element);
-      parent.insertBefore(selected_element, sibling.nextSibling);
-    }
-  } else if (key === "w" && parent.previousSibling !== null) {
-    parent.removeChild(selected_element);
-    parent.previousSibling.appendChild(selected_element);
-  } else if (key === "s" && parent.children.length == 1) {
-    return;
-  } else if (key === "s" && parent.nextSibling !== null) {
-    parent.removeChild(selected_element);
-    parent.nextSibling.appendChild(selected_element);
-  } else if (key === "s" && parent.nextSibling === null) {
-    parent.removeChild(selected_element);
-    let container = create_chain([]);
-    container.appendChild(selected_element);
-    app.append(container);
-  } else if (key === "q" && parent.children.length > 1) {
-    parent.removeChild(selected_element);
-    parent.insertBefore(selected_element, parent.children[0]);
-  } else if (key === "e") {
-    parent.removeChild(selected_element);
-    parent.appendChild(selected_element);
+  $(".active")
+    .parent()
+    .each((i, parent) => {
+      const active = $(parent).find(".active");
+      if (key === "a") {
+        active.each((j, element) => {
+          if (key === "a") {
+            let sibling = element.previousSibling;
+            if (sibling !== null) {
+              parent.removeChild(element);
+              parent.insertBefore(element, sibling);
+            } else {
+              return false;
+            }
+          }
+        });
+      } else if (key === "d") {
+        active.reverse().each((i, element) => {
+          let sibling = element.nextSibling;
+          if (sibling !== null) {
+            parent.removeChild(element);
+            parent.insertBefore(element, sibling.nextSibling);
+          } else {
+            return false;
+          }
+        });
+      } else if (key === "w" && parent.previousSibling !== null) {
+        active.each((j, element) => {
+          parent.removeChild(element);
+          parent.previousSibling.appendChild(element);
+        });
+      } else if (
+        key === "w" &&
+        parent.previousSibling === null &&
+        parent.children.length > active.length
+      ) {
+        let container = create_chain([]);
+        let app0 = app.get(0);
+        app0.insertBefore(container, parent);
+        active.each((j, element) => {
+          parent.removeChild(element);
+          parent.previousSibling.appendChild(element);
+        });
+      } else if (key === "s" && parent.nextSibling !== null) {
+        active.each((j, element) => {
+          parent.removeChild(element);
+          parent.nextSibling.appendChild(element);
+        });
+      } else if (
+        key === "s" &&
+        parent.nextSibling === null &&
+        parent.children.length > active.length
+      ) {
+        let container = create_chain([]);
+        app.append(container);
+        active.each((j, element) => {
+          parent.removeChild(element);
+          parent.nextSibling.appendChild(element);
+        });
+      } else if (key === "q" && parent.children.length > 1) {
+        active.reverse().each((j, element) => {
+          parent.removeChild(element);
+          parent.insertBefore(element, parent.children[0]);
+        });
+      } else if (key === "e") {
+        active.each((j, element) => {
+          parent.removeChild(element);
+          parent.appendChild(element);
+        });
+      }
+    });
+
+  // deal with jk.
+  if (key === "j") {
+    $(".active")
+      .parent()
+      .reverse()
+      .each((i, parent) => {
+        let parentSibling = parent.nextSibling;
+        if (parentSibling !== null) {
+          let app0 = app.get(0); // get the DOM from jquery wrapper
+          app0.removeChild(parent);
+          app0.insertBefore(parent, parentSibling.nextSibling);
+        } else {
+          return false;
+        }
+      });
   } else if (key === "k") {
-    let parentSibling = parent.previousSibling;
-    if (parentSibling !== null) {
-      let app0 = app.get(0);
-      app0.removeChild(parent);
-      app0.insertBefore(parent, parentSibling);
-    }
-  } else if (key === "j") {
-    let parentSibling = parent.nextSibling;
-    if (parentSibling !== null) {
-      let app0 = app.get(0);
-      app0.removeChild(parent);
-      app0.insertBefore(parent, parentSibling.nextSibling);
-    }
+    $(".active")
+      .parent()
+      .each((i, parent) => {
+        let parentSibling = parent.previousSibling;
+        if (parentSibling !== null) {
+          let app0 = app.get(0); // get the DOM from jquery wrapper
+          app0.removeChild(parent);
+          app0.insertBefore(parent, parentSibling);
+        } else {
+          return false;
+        }
+      });
   }
 });
 
