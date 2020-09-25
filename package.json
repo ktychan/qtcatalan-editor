@@ -8,6 +8,7 @@
     "build": "parcel build index.html --out-dir docs --public-url /qtcatalan-editor/"
   },
   "dependencies": {
+    "firebase": "^7.21.1",
     "jquery": "3.5.1"
   },
   "devDependencies": {

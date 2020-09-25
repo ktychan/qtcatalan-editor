@@ -1,11 +1,25 @@
 import "./styles.css";
 import { make_path } from "./dyck.js";
 import $ from "jquery";
+import * as firebase from "firebase/app";
+import "firebase/database";
+
+// configure firebase
+firebase.initializeApp({
+  apiKey: "AIzaSyCM-f_pFQIBsCzO7T5QFvo4_w_BrjPqjgM",
+  authDomain: "qtcatalan.firebaseapp.com",
+  databaseURL: "https://qtcatalan.firebaseio.com",
+  projectId: "qtcatalan",
+  storageBucket: "qtcatalan.appspot.com",
+  messagingSenderId: "412480664766",
+  appId: "1:412480664766:web:325fded35f4b5cb3309aef",
+});
+
 $.fn.reverse = [].reverse;
 
-let app = $("#app");
-var urlParams = new URLSearchParams(window.location.search);
-let n = urlParams.get("n");
+const app = $("#app");
+const urlParams = new URLSearchParams(window.location.search);
+const n = urlParams.get("n");
 $(`#n${n}`).addClass("active-n");
 
 // error checker
@@ -83,7 +97,7 @@ document.addEventListener("keyup", (event) => {
 // deal with keypress events
 window.addEventListener("keypress", (event) => {
   const key = event.key;
-  if ("wasdqejkWS".indexOf(key) < 0) {
+  if ("wasdqejkWSJK".indexOf(key) < 0) {
     console.log(key + " is ignored.");
     return;
   }
@@ -204,6 +218,17 @@ window.addEventListener("keypress", (event) => {
           return false;
         }
       });
+  } else if (key === "J") {
+    $(".active")
+      .parent()
+      .each((i, parent) => {
+        let a = $(parent).find(".active:first");
+        console.log(a);
+      });
+  } else if (key === "K") {
+    $(".active")
+      .parent()
+      .each((i, parent) => {});
   }
 });
 
@@ -234,38 +259,25 @@ document.getElementById("show-everything-button").onclick = () => {
 };
 
 document.getElementById("save-button").onclick = () => {
-  $("#status").html("Download data...");
-  $.ajax({
-    url: "https://api.jsonbin.io/b/5f6816637243cd7e82405f1b/latest",
-    method: "GET",
-  }).done((data) => {
-    let chains = [];
-    for (let container of app.children()) {
-      let chain = [];
-      for (let element of container.children) {
-        chain.push(element.data);
-      }
-      chains.push(chain);
+  $("#status").html("Uploading...");
+  let chains = [];
+  for (let container of app.children()) {
+    let chain = [];
+    for (let element of container.children) {
+      chain.push(element.data);
     }
 
-    data[n] = chains;
-    $("#status").html("Uploading...");
-    $.ajax({
-      url: "https://api.jsonbin.io/b/5f6816637243cd7e82405f1b",
-      method: "PUT",
-      crossDomain: true,
-      contentType: "application/json",
-      data: JSON.stringify(data),
-    })
-      .done((data, textStatus) => {
-        $("#status").html("Saved");
-      })
-      .fail((err, textStatus) => {
-        $("#status").html("Failed :(");
-        console.log(err);
-        console.log(textStatus);
-      });
-  });
+    if (chain.length > 0) {
+      chains.push(chain);
+    }
+  }
+
+  firebase
+    .database()
+    .ref(`/current/${n}`)
+    .set(chains, (err) => {
+      $("#status").html(err ? "Failed to save." : "Saved.");
+    });
 };
 
 document.getElementById("status").onclick = () => {
@@ -302,13 +314,20 @@ document.getElementById("next-error-button").onclick = () => {
   }
 };
 
-// populate app
-$.ajax({
-  url: "https://api.jsonbin.io/b/5f6816637243cd7e82405f1b/latest",
-  method: "GET",
-}).done((data, textStatus, jqXHR) => {
-  let chains = data[n];
-  for (let chain of chains) {
-    app.append(create_chain(chain));
-  }
-});
+firebase
+  .database()
+  .ref(`/current/${n}`)
+  .once("value")
+  .then((snapshot) => {
+    if (snapshot.val()) {
+      for (let chain of snapshot.val()) {
+        // we shouldn't have empty arrays in there.
+        // but we'll check just to be sure.
+        if (!chain) {
+          continue;
+        }
+
+        app.append(create_chain(chain));
+      }
+    }
+  });
