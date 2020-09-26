@@ -55,3 +55,14 @@ input::-webkit-inner-spin-button {
 #app {
   padding-top: 60px;
 }
+
+@media print {
+  #toolbar {
+    display: none;
+  }
+
+  #app {
+    display: block;
+    padding-top: inherit;
+  }
+}
