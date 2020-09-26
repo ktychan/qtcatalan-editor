@@ -1,3 +1,5 @@
+import $ from "jquery";
+
 function draw_grid(canvas, unit, margin) {
   let height = canvas.height - 2 * margin;
   let width = canvas.width - 2 * margin;
@@ -62,45 +64,27 @@ function draw_path(canvas, w, unit, margin) {
 /*
  * make div and draw dyck word and everything
  */
-function make_path(path, onclick, unit = 20, margin = 5) {
+function make_path(path, unit = 20, margin = 5) {
   let w = path[0];
   let area = path[1];
   let dinv = path[2];
-  let bounce = path[3];
 
-  let n = Math.floor(w.length / 2);
-  let width = n * unit + 2 * margin;
-  let height = n * unit + 2 * margin;
+  const n = Math.floor(w.length / 2);
+  const width = n * unit + 2 * margin;
+  const height = n * unit + 2 * margin;
+  const pathid = "d" + w.join("");
 
-  let canvas = document.createElement("canvas");
-  canvas.className = "dyck-canvas";
-  canvas.width = width;
-  canvas.height = height;
+  const container = $(`
+  <div id="${pathid}" class="dyck-container degree-${area+dinv} area-${area} dinv-${dinv}">
+    <canvas class="dyck-canvas" width="${width}" height="${height}"></canvas>
+    <div class="dyck-overlay" style="width: ${width}px; height: ${height}px">
+      <pre class="dyck-info">area = ${area}\ndinv = ${dinv}</pre>
+    </div>
+  </div>`);
+  const canvas = container.find("canvas").get(0);
   draw_grid(canvas, unit, margin);
   draw_path(canvas, w, unit, margin);
-
-  let info = document.createElement("pre");
-  info.className = "dyck-info";
-  info.innerHTML += `  area = ${area}\n`;
-  info.innerHTML += `  dinv = ${dinv}\n`;
-  info.innerHTML += `bounce = ${bounce}`;
-
-  let overlay = document.createElement("div");
-  overlay.className = "dyck-overlay";
-  overlay.style = `width: ${width}px; height: ${height}px`;
-  overlay.appendChild(info);
-
-  let a = document.createElement("a");
-  a.name = w.join("");
-
-  let container = document.createElement("div");
-  container.data = path;
-  container.id = 'd'+w.join("");
-  container.className = "dyck-container";
-  container.appendChild(canvas);
-  container.appendChild(overlay);
-  container.onclick = () => onclick(container);
-
+  container.get(0).data = path;
   return container;
 }
 

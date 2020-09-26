@@ -1,8 +1,9 @@
-import "./styles.css";
-import { make_path } from "./dyck.js";
 import $ from "jquery";
 import * as firebase from "firebase/app";
 import "firebase/database";
+
+import { make_path } from "./dyck.js";
+import "./styles.css";
 
 // configure firebase
 firebase.initializeApp({
@@ -17,9 +18,7 @@ firebase.initializeApp({
 
 $.fn.reverse = [].reverse;
 
-const app = $("#app");
-const urlParams = new URLSearchParams(window.location.search);
-const n = urlParams.get("n");
+const n = new URLSearchParams(window.location.search).get("n");
 $(`#n${n}`).addClass("active-n");
 
 // error checker
@@ -57,18 +56,29 @@ function check_chain(chain) {
 
 // create a new chain
 function create_chain(children) {
-  let container = document.createElement("div");
-  container.className = "chain";
-  container.observer = new MutationObserver((mutationList, observer) => {
-    check_chain(container);
+  const container = $(`<div class="chain"></div>`);
+  container.each((index, element) => {
+    new MutationObserver((mutationList, observer) => {
+      check_chain(element);
+    }).observe(element, { childList: true });
   });
-  container.observer.observe(container, { childList: true });
 
   // populate the chain
   for (let path of children) {
-    container.appendChild(
-      make_path(path, (element) => $(element).toggleClass("active"))
-    );
+    let element = make_path(path);
+    element.on("click", () => $(element).toggleClass("active"));
+    element.on("dblclick", () => {
+      const href = location.href.split("#")[0];
+      const url = `${href}#${element.attr("id")}`;
+
+      $("#sage-code").css("display", "block");
+      $("#sage-code").val(url);
+      $("#sage-code").get(0).select();
+      document.execCommand("copy");
+      $("#sage-code").css("display", "none");
+      $("#status").html(`<code>${url}</code> copied to clipboard.`);
+    });
+    container.append(element);
   }
 
   return container;
@@ -133,22 +143,31 @@ window.addEventListener("keypress", (event) => {
           parent.removeChild(element);
           parent.previousSibling.appendChild(element);
         });
+        if ($(parent).children().length === 0) {
+          $(parent).remove();
+        }
       } else if (
         key === "w" &&
         parent.previousSibling === null &&
         parent.children.length > active.length
       ) {
         let container = create_chain([]);
-        let app0 = app.get(0);
+        let app0 = $("#app").get(0);
         app0.insertBefore(container, parent);
         active.each((j, element) => {
           parent.removeChild(element);
           parent.previousSibling.appendChild(element);
         });
+        if ($(parent).children().length === 0) {
+          $(parent).remove();
+        }
       } else if (key === "s" && parent.nextSibling !== null) {
         active.each((j, element) => {
           parent.removeChild(element);
           parent.nextSibling.appendChild(element);
+          if ($(parent).children().length === 0) {
+            $(parent).remove();
+          }
         });
       } else if (
         key === "s" &&
@@ -156,11 +175,14 @@ window.addEventListener("keypress", (event) => {
         parent.children.length > active.length
       ) {
         let container = create_chain([]);
-        app.append(container);
+        $("#app").append(container);
         active.each((j, element) => {
           parent.removeChild(element);
           parent.nextSibling.appendChild(element);
         });
+        if ($(parent).children().length === 0) {
+          $(parent).remove();
+        }
       } else if (key === "q" && parent.children.length > 1) {
         active.reverse().each((j, element) => {
           parent.removeChild(element);
@@ -172,17 +194,13 @@ window.addEventListener("keypress", (event) => {
           parent.appendChild(element);
         });
       } else if (key === "W" && parent.children.length > active.length) {
-        let container = create_chain([]);
-        let app0 = app.get(0);
-        app0.insertBefore(container, parent);
+        $(parent).before(create_chain([]));
         active.each((j, element) => {
           parent.removeChild(element);
           parent.previousSibling.appendChild(element);
         });
       } else if (key === "S" && parent.children.length > active.length) {
-        let container = create_chain([]);
-        let app0 = app.get(0);
-        app0.insertBefore(container, parent.nextSibling);
+        $(parent).after(create_chain([]));
         active.each((j, element) => {
           parent.removeChild(element);
           parent.nextSibling.appendChild(element);
@@ -198,7 +216,7 @@ window.addEventListener("keypress", (event) => {
       .each((i, parent) => {
         let parentSibling = parent.nextSibling;
         if (parentSibling !== null) {
-          let app0 = app.get(0); // get the DOM from jquery wrapper
+          let app0 = $("#app").get(0); // get the DOM from jquery wrapper
           app0.removeChild(parent);
           app0.insertBefore(parent, parentSibling.nextSibling);
         } else {
@@ -211,7 +229,7 @@ window.addEventListener("keypress", (event) => {
       .each((i, parent) => {
         let parentSibling = parent.previousSibling;
         if (parentSibling !== null) {
-          let app0 = app.get(0); // get the DOM from jquery wrapper
+          let app0 = $("#app").get(0); // get the DOM from jquery wrapper
           app0.removeChild(parent);
           app0.insertBefore(parent, parentSibling);
         } else {
@@ -232,36 +250,21 @@ window.addEventListener("keypress", (event) => {
   }
 });
 
-document.getElementById("filter-button").onclick = () => {
-  let input = document.getElementById("filter-input");
-  if (input.value !== null) {
-    let value = Number(input.value);
-    for (let container of app.children()) {
-      let chain = [];
-      for (let element of container.children) {
-        if (element.data[1] + element.data[2] !== value) {
-          element.style.display = "none";
-        } else {
-          element.style.display = "block";
-        }
-      }
-    }
-  }
-};
+$("#filter-button").on("click", () => {
+  const degree = $("#filter-input").val();
+  $(`.dyck-container:not(.degree-${degree}`).hide();
+  $(`.degree-${degree}`).show();
+});
 
-document.getElementById("show-everything-button").onclick = () => {
-  for (let container of app.children()) {
-    let chain = [];
-    for (let element of $(container).children()) {
-      element.style.display = "block";
-    }
-  }
-};
+$("#show-everything-button").on("click", () => {
+  console.log("hello");
+  $(".dyck-container").css("display", "block");
+});
 
-document.getElementById("save-button").onclick = () => {
+$("#save-button").on("click", () => {
   $("#status").html("Uploading...");
   let chains = [];
-  for (let container of app.children()) {
+  for (let container of $("#app").children()) {
     let chain = [];
     for (let element of container.children) {
       chain.push(element.data);
@@ -278,15 +281,13 @@ document.getElementById("save-button").onclick = () => {
     .set(chains, (err) => {
       $("#status").html(err ? "Failed to save." : "Saved.");
     });
-};
+});
 
-document.getElementById("status").onclick = () => {
-  $("#status").html("");
-};
+$("#status").on("click", () => $("#status").html(""));
 
-document.getElementById("sage-button").onclick = () => {
+$("#sage-button").on("click", () => {
   let output = "chains = [\n";
-  for (let container of app.children()) {
+  for (let container of $("#app").children()) {
     output += "  [\n";
     for (let element of container.children) {
       output += `    DyckWord([${element.data[0]}]),\n`;
@@ -302,17 +303,18 @@ document.getElementById("sage-button").onclick = () => {
   document.execCommand("copy");
   $("#sage-code").css("display", "none");
   $("#status").html("Sage code saved to clip board.");
-};
+});
 
-document.getElementById("next-error-button").onclick = () => {
-  let element = $(".error")[0];
-  if (element) {
-    $(element).attr("tabindex", -1);
-    $(element).trigger("focus");
+$("#next-error-button").on("click", () => {
+  if ($(".error").length == 0) {
+    $("#status").html("Yaaaaaaay! No error!");
   } else {
-    $("#status").html("Yaaaaay! No error.");
+    const element = $(".error").first();
+    element.attr("tabindex", -1);
+    element.trigger("focus");
+    element.removeAttr("tabindex");
   }
-};
+});
 
 firebase
   .database()
@@ -327,7 +329,16 @@ firebase
           continue;
         }
 
-        app.append(create_chain(chain));
+        $("#app").append(create_chain(chain));
+      }
+
+      const pathid = location.href.split("#")[1];
+      if (pathid) {
+        let element = $(`#${pathid}`)
+        element.addClass("active");
+        element.attr("tabindex", -1);
+        element.trigger("focus");
+        element.removeAttr("tabindex");
       }
     }
   });
