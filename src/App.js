@@ -4,11 +4,7 @@ import { range } from "./utils";
 import ChainContainer from "./components/chains";
 import './App.scss';
 
-export default class App extends React.Component {
-  constructor(props) {
-    super(props);
-    this.handleFirebaseUpdate = this.handleFirebaseUpdate.bind(this);
-  }
+class Experiments extends React.Component {
 
   componentDidMount() {
     // TODO
@@ -18,18 +14,28 @@ export default class App extends React.Component {
     // TODO
   }
 
+}
+
+export default class App extends React.Component {
+  constructor(props) {
+    super(props);
+    this.handleFirebaseUpdate = this.handleFirebaseUpdate.bind(this);
+  }
+
   render() {
-    const pages = range(1,8).map((i) => <li  key={i}><Link to={`${i}`}><code>n={i}</code></Link></li>);
+    const pages = range(1,8).map((i) => <li  key={i}><Link to={`/editor/${i}`}><code>n={i}</code></Link></li>);
     return (
       <Router forceRefresh={true}>
         <nav>
           <ul>
             {pages}
           </ul>
+          <Experiments  />
         </nav>
 
         <Switch>
-          <Route path="/:n" component={ChainContainer}/>
+          <Route path="/editor/:n" render={p => <ChainContainer path={`/current/${p.match.params.n}`}/>}/>
+          <Route path="/experiments/:type/:n/:name" render={p => <ChainContainer path={`${p.location.pathname}`}/>}/>
         </Switch>
       </Router>
     );

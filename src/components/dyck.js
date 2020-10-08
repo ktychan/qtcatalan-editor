@@ -8,22 +8,27 @@ export default class DyckPath extends React.Component {
   }
 
   componentDidMount() {
+    this.clear_canvas();
+    this.draw_grid();
+    this.draw_path();
+  }
+
+  componentDidUpdate() {
+    this.clear_canvas();
     this.draw_grid();
     this.draw_path();
   }
 
   render() {
-    const w = this.props.data[0];
-    const area = this.props.data[1];
-    const dinv = this.props.data[2];
+    const {word,area,dinv,selected} = this.props.data;
 
-    const n = Math.floor(w.length / 2);
+    const n = Math.floor(word.length / 2);
     const width = n * this.props.unit + 2 * this.props.margin;
     const height = n * this.props.unit + 2 * this.props.margin;
-    const pathid = "d" + w.join("");
-
+    const pathid = "d" + word.join("");
+    const selected_class = selected ? "selected" : "";
     return (
-      <div id={pathid} className="dyck-container">
+      <div id={pathid} className={`dyck-container ${selected_class}`}>
         <canvas
           ref={this.canvasRef}
           width={width}
@@ -37,6 +42,12 @@ export default class DyckPath extends React.Component {
         </div>
       </div>
     );
+  }
+
+  clear_canvas() {
+    const canvas = this.canvasRef.current;
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0,0,canvas.width,canvas.height);
   }
 
   draw_grid() {
@@ -80,7 +91,7 @@ export default class DyckPath extends React.Component {
 
   draw_path() {
     const canvas = this.canvasRef.current;
-    const w = this.props.data[0];
+    const {word} = this.props.data;
     const unit = this.props.unit;
     const margin = this.props.margin;
 
@@ -97,7 +108,7 @@ export default class DyckPath extends React.Component {
     // path
     ctx.beginPath();
     ctx.moveTo(x, y);
-    for (let s of w) {
+    for (let s of word) {
       if (s) {
         y += unit;
       } else {
